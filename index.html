@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodeForge</title>
+  <meta name="description" content="A coding-only AI assistant. Bring your own API key.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cpath d='M12 10l-6 6 6 6M20 10l6 6-6 6' stroke='%237ee787' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="logo">&lsaquo;/&rsaquo;</span> CodeForge</div>
+    <div class="controls">
+      <label class="visually-hidden" for="mode">Mode</label>
+      <select id="mode" title="Mode"></select>
+      <button id="new" type="button" title="Start a new chat">New</button>
+      <button id="settingsBtn" type="button" title="Settings">Settings</button>
+    </div>
+  </header>
+
+  <main id="messages" aria-live="polite"></main>
+
+  <div id="status" role="alert"></div>
+
+  <form id="composer" autocomplete="off">
+    <textarea id="input" rows="1" placeholder="Ask a coding question or paste code&hellip;" aria-label="Message"></textarea>
+    <button id="send" type="submit" class="primary">Send</button>
+    <button id="stop" type="button" class="danger" hidden>Stop</button>
+  </form>
+  <p class="foot">Coding questions only. Answers can be wrong &mdash; run and test before you ship.</p>
+
+  <dialog id="settings">
+    <form id="settingsForm">
+      <h2>Settings</h2>
+
+      <label>Provider
+        <select id="provider">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI-compatible</option>
+        </select>
+      </label>
+
+      <label>API key
+        <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false">
+      </label>
+
+      <label>Model
+        <input id="model" type="text" spellcheck="false">
+      </label>
+
+      <label id="baseUrlRow">Base URL
+        <input id="baseUrl" type="text" spellcheck="false">
+      </label>
+
+      <label>Max output tokens
+        <input id="maxTokens" type="number" min="256" max="64000" step="256">
+      </label>
+
+      <p class="hint">Your key is stored only in this browser (localStorage) and sent straight to the provider you pick. Use a key with a spending limit, and never use this page on a shared computer.</p>
+
+      <div class="row">
+        <button type="button" id="cancelSettings">Cancel</button>
+        <button type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
