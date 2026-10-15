@@ -3,62 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CodeForge</title>
-  <meta name="description" content="A coding-only AI assistant. Bring your own API key.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cpath d='M12 10l-6 6 6 6M20 10l6 6-6 6' stroke='%237ee787' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <title>LuauForge</title>
+  <meta name="description" content="A free Luau and Roblox coding assistant that runs entirely in your browser. No account, no API key.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1220'/%3E%3Cpath d='M9 8v12a3 3 0 0 0 3 3h11' stroke='%2338bdf8' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
-    <div class="brand"><span class="logo">&lsaquo;/&rsaquo;</span> CodeForge</div>
+    <div class="brand"><span class="logo">L</span> LuauForge <span id="pill" class="pill idle">Docs mode</span></div>
     <div class="controls">
       <label class="visually-hidden" for="mode">Mode</label>
-      <select id="mode" title="Mode"></select>
-      <button id="new" type="button" title="Start a new chat">New</button>
-      <button id="settingsBtn" type="button" title="Settings">Settings</button>
+      <select id="mode"></select>
+      <button id="loadBtn" type="button" class="primary" title="Download the free AI model (cached after the first time)">Load AI model</button>
+      <button id="brainBtn" type="button" title="Lessons the assistant has learned">Brain</button>
+      <button id="checkBtn" type="button" title="Check a Luau script for problems">Check code</button>
+      <button id="settingsBtn" type="button">Settings</button>
+      <button id="newBtn" type="button">New chat</button>
     </div>
   </header>
 
-  <main id="messages" aria-live="polite"></main>
+  <div id="progress" hidden>
+    <div class="track"><div id="bar"></div></div>
+    <div id="progressText" class="muted"></div>
+  </div>
 
+  <main id="messages" aria-live="polite"></main>
   <div id="status" role="alert"></div>
 
   <form id="composer" autocomplete="off">
-    <textarea id="input" rows="1" placeholder="Ask a coding question or paste code&hellip;" aria-label="Message"></textarea>
+    <textarea id="input" rows="1" placeholder="Ask about Luau or Roblox, or paste a script to check it" aria-label="Message"></textarea>
     <button id="send" type="submit" class="primary">Send</button>
     <button id="stop" type="button" class="danger" hidden>Stop</button>
   </form>
-  <p class="foot">Coding questions only. Answers can be wrong &mdash; run and test before you ship.</p>
+  <p class="foot">Luau and Roblox only. Always test in Studio before you ship.</p>
 
-  <dialog id="settings">
+  <dialog id="settingsDlg">
     <form id="settingsForm">
       <h2>Settings</h2>
-
-      <label>Provider
-        <select id="provider">
-          <option value="anthropic">Anthropic (Claude)</option>
-          <option value="openai">OpenAI-compatible</option>
-        </select>
+      <p id="gpuInfo" class="hint"></p>
+      <label>AI model size
+        <select id="modelKey"></select>
       </label>
-
-      <label>API key
-        <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false">
+      <label>Creativity (0 is most precise)
+        <input id="temperature" type="number" min="0" max="1" step="0.05">
       </label>
-
-      <label>Model
-        <input id="model" type="text" spellcheck="false">
+      <label>Max answer length (tokens)
+        <input id="maxTokens" type="number" min="256" max="2048" step="128">
       </label>
-
-      <label id="baseUrlRow">Base URL
-        <input id="baseUrl" type="text" spellcheck="false">
-      </label>
-
-      <label>Max output tokens
-        <input id="maxTokens" type="number" min="256" max="64000" step="256">
-      </label>
-
-      <p class="hint">Your key is stored only in this browser (localStorage) and sent straight to the provider you pick. Use a key with a spending limit, and never use this page on a shared computer.</p>
-
+      <label class="check"><input id="selfCheck" type="checkbox"> Self-check: lint the AI's code and make it fix problems</label>
+      <label class="check"><input id="autoLoad" type="checkbox"> Load the AI model automatically after the first time</label>
+      <details>
+        <summary>Use your own fine-tuned model (advanced)</summary>
+        <p class="hint">Point this at a model you converted to MLC format. See the README. Leave empty to use the built-in choice.</p>
+        <label>Model id <input id="customId" type="text" spellcheck="false"></label>
+        <label>Weights URL (Hugging Face repo, ends with /resolve/main/) <input id="customModel" type="text" spellcheck="false"></label>
+        <label>Model library URL (.wasm) <input id="customLib" type="text" spellcheck="false"></label>
+      </details>
       <div class="row">
         <button type="button" id="cancelSettings">Cancel</button>
         <button type="submit" class="primary">Save</button>
@@ -66,6 +66,37 @@
     </form>
   </dialog>
 
-  <script src="app.js"></script>
+  <dialog id="brainDlg">
+    <h2>Brain</h2>
+    <p id="memCount" class="hint"></p>
+    <p class="hint">The AI's weights do not change. It learns by saving lessons here and recalling the best match for each new question. Lessons stay in this browser.</p>
+    <label>Question
+      <textarea id="teachQ" rows="2" placeholder="How do I ...?"></textarea>
+    </label>
+    <label>Correct answer
+      <textarea id="teachA" rows="6" placeholder="The answer I should give next time, with code in ```lua blocks"></textarea>
+    </label>
+    <div class="row left"><button type="button" id="teachSave" class="primary">Save lesson</button></div>
+    <ul id="memList" class="mem"></ul>
+    <div class="row">
+      <button type="button" id="exportMem">Export lessons (.md)</button>
+      <label class="filebtn">Import<input id="importMem" type="file" accept=".md,.txt" hidden></label>
+      <button type="button" id="clearMem" class="danger">Delete all</button>
+      <button type="button" id="closeBrain">Close</button>
+    </div>
+  </dialog>
+
+  <dialog id="checkDlg">
+    <h2>Check code</h2>
+    <p class="hint">Fast, built-in checks for deprecated APIs, unprotected DataStore and HTTP calls, unvalidated remotes, infinite loops and unbalanced brackets. It is not a full type-check.</p>
+    <textarea id="checkCode" rows="12" spellcheck="false" placeholder="Paste your Luau script here"></textarea>
+    <div id="checkOut" class="checkout"></div>
+    <div class="row">
+      <button type="button" id="runCheck" class="primary">Check</button>
+      <button type="button" id="closeCheck">Close</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
